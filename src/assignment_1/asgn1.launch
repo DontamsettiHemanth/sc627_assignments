@@ -1,6 +1,5 @@
 <launch>
 <include file ="$(find turtlebot3_gazebo)/launch/turtlebot3_empty_world.launch"/>
 <node name="move_xy_server" pkg="sc627_helper" type="move_xy_server.py"/>
-<node name='bug_base' pkg=sc627_assignments type="bug_1.py"/>
-<!node name='bug_base' pkg=sc627_assignments type="bug_base.py"/>
+<node name='bug_base' pkg='sc627_assignments' type="bug_base.py"/>
 </launch>
