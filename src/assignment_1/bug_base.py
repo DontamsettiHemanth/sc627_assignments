@@ -5,7 +5,7 @@ import rospy
 import actionlib
 from helper import*
 
-rospy.init_node('test', anonymous= True)
+rospy.init_node('bugbase', anonymous= True)
 
 #Initialize client
 client = actionlib.SimpleActionClient('move_xy', MoveXYAction)
@@ -27,17 +27,7 @@ with open("/root/catkin_ws/src/sc627_assignments/src/assignment_1/input_format.t
             obstacles.append(P)
             P = []
         x,y = [change(i) for i in f.readline().split(", ")]
-        P.append(point(x,y))
-def gen_Output(f,path): #check the correctness
-    with open(f,'w') as file:
-        file.write(str(path[0]))
-        for p in path[1:]:
-            file.write("\n")
-            file.write(str(p))
-            pass
-    
-
-        
+        P.append(point(x,y))       
 
 def bugbase(start,goal,obstacles,stepsize):
     tolerance = stepsize/2
