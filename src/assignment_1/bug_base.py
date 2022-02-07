@@ -80,7 +80,7 @@ def bugbase(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
         current_position,_ = pub_goal(candidate_current_position, dir)
         #current_position = candidate_current_position
         path.append(current_position)
-    current_position,_ = pub_goal(current_position, goal - current_position)
+    current_position,_ = pub_goal(goal, point(0, 0))  # Last step to goal apparently
     path.append(current_position)
     gen_Output(f, path)
     return "Success!!!", path

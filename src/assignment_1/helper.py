@@ -110,7 +110,7 @@ def computeTangentVectorToPolygon(P, q, tolerance):
     """
     Note : modified algo (compared to book)to avoid spiralling around the obstacle
     OUTPUT : vector , 1/0
-           Arg 1) where 'vector' is tangent vector if the point is with 2*tolerance bound
+           Arg 1) where 'vector' is tangent vector if the point is within 1.5*tolerance bound
             of polgon, else is a vector which goes close to the polygon.
            Arg 2) 1 if point q is outside polygon P , 0 if inside P
     """
@@ -157,7 +157,7 @@ def computeTangentVectorToPolygon(P, q, tolerance):
                     return n2, 1
 
     else:
-        # print("Inside Virtual Obstacle! Moving towards the boundary")
+        # Inside Virtual Obstacle! Moving towards the boundary
         d, w = computeDistancePointToSegment(q, P[0], P[1])
         minargs = [0, d]
         for i in range(1, num_P):
