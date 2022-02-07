@@ -71,14 +71,14 @@ def bugbase(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
     f = '/root/catkin_ws/src/sc627_assignments/src/assignment_1/output_base.txt'
     while point.dist(current_position, goal) > stepsize:
         candidate_current_position = dir.multi(stepsize/dir.norm()) + current_position
-        dists = []
-        for P in obstacles:  # compute distance from candidate-current-position to each obstacle
-            dists.append(computeDistancePointToPolygon(P, candidate_current_position))
-        if min(dists) < tolerance :
-            gen_Output(f, path)
-            return "Failure: There is an obstacle lying between the start and goal", path
+        if len(obstacles)>0:
+            dists = []
+            for P in obstacles:  # compute distance from candidate-current-position to each obstacle
+                dists.append(computeDistancePointToPolygon(P, candidate_current_position))
+            if min(dists) < tolerance :
+                gen_Output(f, path)
+                return "Failure: There is an obstacle lying between the start and goal", path
         current_position,_ = pub_goal(candidate_current_position, dir)
-        #current_position = candidate_current_position
         path.append(current_position)
     current_position,_ = pub_goal(goal, point(0, 0))  # Last step to goal apparently
     path.append(current_position)
