@@ -13,13 +13,14 @@ client = actionlib.SimpleActionClient('move_xy', MoveXYAction)
 client.wait_for_server()
 """
 # reading input file
-in_file = "/root/catkin_ws/src/sc627_assignments/src/assignment_1/input_format.txt"
+inf = "/root/catkin_ws/src/sc627_assignments/src/assignment_1/input_format.txt"
 # in_file = "./input_format.txt"
-with open(in_file, 'r') as f:
+with open(inf, 'r') as f:
     change = float
     start = [change(i) for i in f.readline().split(", ")]
-    print start
+    start = point(start[0], start[1])
     goal = [change(i) for i in f.readline().split(", ")]
+    goal = point(goal[0], goal[1])
     stepsize = change(f.readline())
     n = f.readline()
     lines = f.readlines()
@@ -31,68 +32,90 @@ with open(in_file, 'r') as f:
             obstacles.append(P)
             P = []
         else:
-            x, y = [change(point) for point in lines[i].split(", ")]
-            print point(x, y)
-            P.append(point(x, y))
-            
+            x, y = [change(xypoint) for xypoint in lines[i].split(", ")]
+            temp = point(x, y)
+            P.append(temp)
+
         i += 1
     obstacles.append(P)
+    tolerance = stepsize*0.5
 
-    def GoalDist(pos, goal=goal):
-        return (goal - pos).norm()
 
-    def TowardsGoal(pos, goal=goal):
-        dir = goal - pos
-        return dir.multi(stepsize/dir.norm()) + pos
+def GoalDist(pos, goal=goal):
+    return (goal - pos).norm()
 
-    def min_obs_Clearance(pos, obstacles=obstacles):
-        mindist = computeDistancePointToPolygon(obstacles[0], pos)
-        minp = obstacles[0]
-        for P in obstacles[1:]:
 
-            # compute distance from candidate-current-pos to each obstacle
-            dist = computeDistancePointToPolygon(P, pos)
-            if dist < mindist:
-                mindist = dist
-                minp = P
-        if mindist < tolerance:
-            hit = True
-        return hit, mindist, minp
+def TowardsGoal(pos, goal=goal):
+    dir = goal - pos
+    return dir.multi(stepsize/dir.norm()) + pos
+
+
+def min_obs_Clearance(pos, obstacles=obstacles):
+    mindist = computeDistancePointToPolygon(obstacles[0], pos)
+    minp = obstacles[0]
+    hit = False
+    for P in obstacles[1:]:
+
+        # compute distance from candidate-current-pos to each obstacle
+        dist = computeDistancePointToPolygon(P, pos)
+        if dist < mindist:
+            mindist = dist
+            minp = P
+    if mindist < tolerance:
+        hit = True
+    return hit, mindist, minp
 
 
 def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
-    tolerance = stepsize/2
     current_pos = start
     path = [start]
     f = '/root/catkin_ws/src/sc627_assignments/src/assignment_1/output_1.txt'
-    #f = "./output_1.txt"
+    # f = "./output_1.txt"
     while GoalDist(current_pos) > stepsize:
         next_pos = TowardsGoal(current_pos)
         if len(obstacles) > 0:
             hit, mindist, minp = min_obs_Clearance(next_pos)
             if hit:
-                # hit an obstacle: circumcircle the obstacle with storing min dist to the goal while doing so
+                if mindist > 0:
+                    current_pos = current_pos + (next_pos - current_pos).multi(0.5)
+                    path.append(current_pos)
+                print "Hit: ", hit, mindist, minp[0]
+                # circumcircle the obstacle, storing min dist to the goal
                 obs_s = current_pos
                 min_goal_pos = obs_s
                 # first get away from obstacle starting point
-                dir = computeTangentVectorToPolygon(minp,current_pos)
-                current_pos = dir.multi(stepsize/dir.norm()) + current_pos
+                dir, outside = computeTangentVectorToPolygon(minp, current_pos, tolerance)
+                current_pos = dir.multi(stepsize) + current_pos
                 # Didn't Check collision while circumventing obstacle
                 path.append(current_pos)
-                if GoalDist(obs_s) > GoalDist(current_pos):
+                if GoalDist(min_goal_pos) > GoalDist(current_pos):
                     min_goal_pos = current_pos
                 # circumvent till obstacle is within tolerance
+                j = 0
                 while (current_pos - obs_s).norm() > tolerance:
-                    dir = computeTangentVectorToPolygon(minp,current_pos)
-                    current_pos = dir.multi(stepsize/dir.norm()) + current_pos
+                    j += 1
+                    if j % 2000 == 0:
+                        gen_Output(f, path)
+                        return 'circumventing Failure', path
+                    dir, outside = computeTangentVectorToPolygon(minp, current_pos,tolerance)
+                    if not outside:
+                        print "Inside virtual obstacle: ", j
+                    current_pos = dir.multi(stepsize) + current_pos
                     # Didn't Check collision while circumventing obstacle
                     path.append(current_pos)
-                    if GoalDist(obs_s) > GoalDist(current_pos):
-                        min_goal_pos = current_pos  
+                    if GoalDist(min_goal_pos) > GoalDist(current_pos):
+                        min_goal_pos = current_pos
                 # circumvent the obstacle untill minDist point is found
+                j = 0
                 while (current_pos - min_goal_pos).norm() > tolerance:
-                    dir = computeTangentVectorToPolygon(minp,current_pos)
-                    current_pos = dir.multi(stepsize/dir.norm()) + current_pos
+                    j += 1
+                    if j % 10000 == 0:
+                        gen_Output(f, path)
+                        print 'circumventing towards min_pos failure', path
+                    dir, outside = computeTangentVectorToPolygon(minp, current_pos,tolerance)
+                    if not outside:
+                        print "Inside virtual obstacle: ", j
+                    current_pos = dir.multi(stepsize) + current_pos
                     # Didn't Check collision while circumventing obstacle
                     path.append(current_pos)
                 next_pos = TowardsGoal(current_pos)
@@ -109,8 +132,9 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
             current_pos = next_pos
             path.append(current_pos)
     path.append(goal)
-    gen_Output(f,path)
-    return "Success",path
+    gen_Output(f, path)
+    return "Success", path
+
 
 a, b = bug1()
 print a
@@ -128,7 +152,7 @@ while True: #replace true with termination condition
     wp = MoveXYGoal()
     wp.pose_dest.x = 1 + result.pose_final.x
     wp.pose_dest.y = 1
-    wp.pose_dest.theta = 3.14/4 #theta is the orientation of robot in radians (0 to 2pi)
+    wp.pose_dest.theta = 3.14/4 #theta->orientation of robot(0 to 2pi)
 
     #send waypoint to turtlebot3 via move_xy server
     client.send_goal(wp)
