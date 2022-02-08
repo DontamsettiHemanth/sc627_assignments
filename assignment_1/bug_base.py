@@ -8,22 +8,24 @@ import numpy as np
 
 
 #reading input file
-with open("/root/catkin_ws/src/sc627_assignments/src/assignment_1/input_format.txt", 'r') as f:
+with open("/root/catkin_ws/src/sc627_assignments/assignment_1/input.txt", 'r') as f:
     change = float
-    start = [change(i) for i in f.readline().split(", ")]
-    goal = [change(i) for i in f.readline().split(", ")]
+    start = [change(i) for i in f.readline().split(",")]
+    start = point(start[0], start[1])
+    goal = [change(i) for i in f.readline().split(",")]
+    goal = point(goal[0], goal[1])
     stepsize = change(f.readline())
     n = f.readline()
     lines = f.readlines()
     i = 0
     P = []
-    obstacles = [] #list of polygons
+    obstacles = []  # list of polygons
     while i < len(lines):
-        if i == n:
+        if lines[i] == n:
             obstacles.append(P)
             P = []
         else:
-            x, y = [change(xypoint) for xypoint in lines[i].split(", ")]
+            x, y = [change(xypoint) for xypoint in lines[i].split(",")]
             temp = point(x, y)
             P.append(temp)
 
@@ -43,24 +45,30 @@ result.pose_final.x = start.x
 result.pose_final.y = start.y
 result.pose_final.theta = 0  # in radians (0 to 2pi)
 
-def pub_goal(next, dir):  # replace true with termination condition
+def pub_goal(next, dir):
 
-    # determine waypoint based on your algo
-    # this is a dummy waypoint (replace the part below)
     wp = MoveXYGoal()
     wp.pose_dest.x = next.x
     wp.pose_dest.y = next.y
-    wp.pose_dest.theta = np.atan2(dir.y,dir.x) + np.pi  # theta is the orientation of robot in radians (0 to 2pi)
+    temp = np.arctan2(dir.y, dir.x)
+    if temp < 0:
+        temp += 2*np.pi
+    wp.pose_dest.theta = temp  # theta is the orientation of robot in radians (0 to 2pi)
 
     # send waypoint to turtlebot3 via move_xy server
     client.send_goal(wp)
-
-    client.wait_for_result()
-
+    timeout = 15.0
+    done = client.wait_for_result(rospy.Duration(secs = timeout))
+    if not done:
+        rospy.loginfo("Couldn't complete goal %r! Sending a Goal along the dir vector %r", str(next), str(dir))
+        dir = dir.multi(1/dir.norm())
+        wp.pose_dest.x -= dir.x*tolerance*0.5
+        wp.pose_dest.y -= dir.y*tolerance*0.5
+        client.send_goal(wp)  # change angle also if didn't work
+        if not (client.wait_for_result(rospy.Duration(secs = timeout))):
+            rospy.logwarn("Couldn't go to %r in %r seconds", str(next), timeout)
     # getting updated robot location
     result = client.get_result()
-
-    # write to output file (replacing the part below)
     return point(result.pose_final.x, result.pose_final.y), result.pose_final.theta
 
 
@@ -68,7 +76,7 @@ def bugbase(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
     current_position = start
     path = [start]
     dir = goal - current_position
-    f = '/root/catkin_ws/src/sc627_assignments/src/assignment_1/output_base.txt'
+    f = '/root/catkin_ws/src/sc627_assignments/assignment_1/output_base.txt'
     while point.dist(current_position, goal) > stepsize:
         candidate_current_position = dir.multi(stepsize/dir.norm()) + current_position
         if len(obstacles)>0:

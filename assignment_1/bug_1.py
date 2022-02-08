@@ -7,13 +7,12 @@ import rospy
 import actionlib
 
 # reading input file
-inf = "/root/catkin_ws/src/sc627_assignments/src/assignment_1/input_format.txt"
-# in_file = "./input_format.txt"
+inf = "/root/catkin_ws/src/sc627_assignments/assignment_1/input.txt"
 with open(inf, 'r') as f:
     change = float
-    start = [change(i) for i in f.readline().split(", ")]
+    start = [change(i) for i in f.readline().split(",")]
     start = point(start[0], start[1])
-    goal = [change(i) for i in f.readline().split(", ")]
+    goal = [change(i) for i in f.readline().split(",")]
     goal = point(goal[0], goal[1])
     stepsize = change(f.readline())
     n = f.readline()
@@ -26,7 +25,7 @@ with open(inf, 'r') as f:
             obstacles.append(P)
             P = []
         else:
-            x, y = [change(xypoint) for xypoint in lines[i].split(", ")]
+            x, y = [change(xypoint) for xypoint in lines[i].split(",")]
             temp = point(x, y)
             P.append(temp)
 
@@ -47,27 +46,30 @@ result.pose_final.y = start.y
 result.pose_final.theta = 0  # in radians (0 to 2pi)
 
 
-def pub_goal(next, dir):  # replace true with termination condition
+def pub_goal(next, dir):
 
-    # determine waypoint based on your algo
-    # this is a dummy waypoint (replace the part below)
     wp = MoveXYGoal()
     wp.pose_dest.x = next.x
     wp.pose_dest.y = next.y
     temp = np.arctan2(dir.y, dir.x)
-    if temp < 0 :
+    if temp < 0:
         temp += 2*np.pi
     wp.pose_dest.theta = temp  # theta is the orientation of robot in radians (0 to 2pi)
 
     # send waypoint to turtlebot3 via move_xy server
     client.send_goal(wp)
-
-    client.wait_for_result()
-
+    timeout = 15.0
+    done = client.wait_for_result(rospy.Duration(secs = timeout))
+    if not done:
+        rospy.loginfo("Couldn't complete goal %r! Sending a Goal along the dir vector %r", str(next), str(dir))
+        dir = dir.multi(1/dir.norm())
+        wp.pose_dest.x -= dir.x*tolerance*0.5
+        wp.pose_dest.y -= dir.y*tolerance*0.5
+        client.send_goal(wp)  # change angle also if didn't work
+        if not (client.wait_for_result(rospy.Duration(secs = timeout))):
+            rospy.logwarn("Couldn't go to %r in %r seconds", str(next), timeout)
     # getting updated robot location
     result = client.get_result()
-
-    # write to output file (replacing the part below)
     return point(result.pose_final.x, result.pose_final.y), result.pose_final.theta
 
 
@@ -83,7 +85,7 @@ def TowardsGoal(pos, goal=goal):
 def min_obs_Clearance(pos, obstacles=obstacles):
     mindist = computeDistancePointToPolygon(obstacles[0], pos)
     minp = obstacles[0]
-    hit = False
+    hit = mindist < tolerance
     for P in obstacles[1:]:
 
         # compute distance from candidate-current-pos to each obstacle
@@ -99,19 +101,20 @@ def min_obs_Clearance(pos, obstacles=obstacles):
 def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
     current_pos = start
     path = [start]
-    f = '/root/catkin_ws/src/sc627_assignments/src/assignment_1/output_1.txt'
+    f = '/root/catkin_ws/src/sc627_assignments/assignment_1/output_1.txt'
     # f = "./output_1.txt"
     while GoalDist(current_pos) > stepsize:
         next_pos = TowardsGoal(current_pos)
         if len(obstacles) > 0:
             hit, mindist, minp = min_obs_Clearance(next_pos)
             if hit:
-                if mindist > 0:
-                    dir = (next_pos - current_pos).multi(0.5)
-                    next_pos = current_pos + dir
-                    current_pos,_ = pub_goal(next_pos, dir)
-                    path.append(current_pos)
-                rospy.loginfo("Hit: %r with distance %f from polygon (%f,%f)", hit, mindist, minp[0].x, minp[0].y)
+
+                dir  = computeNearestVectorTowardsPolygon(minp, current_pos)
+                k = (dir.norm()-0.5*tolerance)/dir.norm()
+                next_pos = current_pos + dir.multi(k)
+                current_pos, _ = pub_goal(next_pos, dir)
+                path.append(current_pos)
+                rospy.loginfo("Near obstacle with distance %f from polygon (%f, %f)", mindist, minp[0].x, minp[0].y)
                 # circumcircle the obstacle, storing min dist to the goal
                 obs_s = current_pos
                 min_goal_pos = obs_s
@@ -132,7 +135,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                         return 'circumventing Failure', path
                     dir, outside = computeTangentVectorToPolygon(minp, current_pos,tolerance)
                     if not outside:
-                        rospy.loginfo("Inside virtual obstacle: %d", j)
+                        rospy.loginfo("Inside virtual obstacle at step %d", j)
                     next_pos = dir.multi(stepsize) + current_pos
                     # Didn't Check collision while circumventing obstacle
                     current_pos,_ = pub_goal(next_pos, dir)
@@ -140,7 +143,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                     if GoalDist(min_goal_pos) > GoalDist(current_pos):
                         min_goal_pos = current_pos
                 # circumvent the obstacle untill minDist point is found
-                rospy.loginfo("Done circumventing.Going towards minDist point.")
+                rospy.loginfo("Done circumventing after %r steps.Going towards minDist point.", j)
                 j = 0
                 while (current_pos - min_goal_pos).norm() > tolerance:
                     j += 1
@@ -149,13 +152,13 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                         return 'Circumventing towards min_pos failure', path
                     dir, outside = computeTangentVectorToPolygon(minp, current_pos,tolerance)
                     if not outside:
-                        rospy.loginfo("Inside virtual obstacle: %d", j)
+                        rospy.loginfo("Inside virtual obstacle at step %d", j)
                     next_pos = dir.multi(stepsize) + current_pos
                     # Didn't Check collision while circumventing obstacle
                     current_pos,_ = pub_goal(next_pos, dir)
                     path.append(current_pos)
                 current_pos, _ = pub_goal(min_goal_pos, min_goal_pos - current_pos)
-                rospy.loginfo("Reached minDistPoint Going towards goal.")
+                rospy.loginfo("Reached minDistPoint after %d steps. Going towards goal.", j)
                 path.append(current_pos)
                 next_pos = TowardsGoal(current_pos)
                 hit, _, _ = min_obs_Clearance(next_pos)

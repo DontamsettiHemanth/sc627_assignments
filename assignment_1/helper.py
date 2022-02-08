@@ -27,7 +27,7 @@ class point:
         return np.sqrt((q.x-self.x)**2+(q.y-self.y)**2*1.0)
 
     def __str__(self):
-        a = '{}, {}'.format(self.x, self.y)
+        a = '{},{}'.format(self.x, self.y)
         return a
 
 
@@ -105,22 +105,44 @@ def computeDistancePointToPolygon(P, q):
 def sign(a):
     return (a >= 0)*1 - 1*(a < 0)
 
+def computeNearestVectorTowardsPolygon(P,q):
+    """Works if q is outside Polygon"""
+    min_d = computeDistancePointToPolygon(P, q)
+    num_P = len(P)
+    for i in range(num_P):
+        d, w = computeDistancePointToSegment(q, P[i], P[(i+1) % num_P])
+        if min_d == d:
+            d0 = (P[(i+1) % num_P]-P[i])
+            d0 = d0.multi(1/d0.norm())
+            n0 = point(-d0.y, d0.x)
+            if w == 0:
+                return n0.multi(d/n0.norm())
+            elif w == 1:
+                d1 = q - P[i]
+                d1 = d1.multi(1.0/d1.norm())
+                return d1.multi(-d)
+            elif w == 2:
+                d2 = q - P[(i+1) % num_P]
+                d2 = d2.multi(1.0/d2.norm())
+                return d2.multi(-d)
+
 
 def computeTangentVectorToPolygon(P, q, tolerance):
     """
     Note : modified algo (compared to book)to avoid spiralling around the obstacle
     OUTPUT : vector , 1/0
            Arg 1) where 'vector' is tangent vector if the point is within 1.5*tolerance bound
-            of polgon, else is a vector which goes close to the polygon.
+            of polgon, else is a vector which goes close to the polygon or away based 
+            on where it far or inside polygon respectively.
            Arg 2) 1 if point q is outside polygon P , 0 if inside P
     """
     min_d = computeDistancePointToPolygon(P, q)
     num_P = len(P)
     if min_d > 0:
         far = False
-        if min_d > 1.5*tolerance:
+        if min_d > 1.2*tolerance:
             far = True
-            far_factor = 0.55
+            far_factor = 0.8
         for i in range(num_P):
             d, w = computeDistancePointToSegment(q, P[i], P[(i+1) % num_P])
             if min_d == d:
@@ -139,10 +161,6 @@ def computeTangentVectorToPolygon(P, q, tolerance):
                     if far:
                         new = n1 - d1
                         return new.multi(far_factor/new.norm()), 1
-                        # is unit vector as n and d are perpendicular
-                    # if not (n1.dot(n0) <= 0):
-                    #     print "Didn't satisfy condition for w = 1"
-                    #     return n1.multi(-1), 1
                     return n1, 1
                 elif w == 2:
                     d2 = q - P[(i+1) % num_P]
@@ -151,9 +169,6 @@ def computeTangentVectorToPolygon(P, q, tolerance):
                     if far:
                         new = n2 - d2
                         return new.multi(far_factor/new.norm()), 1
-                    # if not (n2.dot(n0) >= 0):
-                    #     print "Didn't satisfy condition for w = 2"
-                    #     return n2.multi(-1), 1
                     return n2, 1
 
     else:
@@ -162,14 +177,14 @@ def computeTangentVectorToPolygon(P, q, tolerance):
         minargs = [0, d]
         for i in range(1, num_P):
             d, w = computeDistancePointToSegment(q, P[i], P[(i+1) % num_P])
-            if min_d > d:
+            if minargs[1] > d:
                 minargs = [i, d]
                 pass
             pass
 
         d0 = P[(minargs[0]+1) % num_P] - P[minargs[0]]
         n0 = point(d0.y, -d0.x)
-        n0 = n0.multi(1/n0.norm())
+        n0 = n0.multi(0.5/n0.norm())
         # unit vector perpendicular to nearest edge of polygon
         return n0, 0
 
