@@ -120,7 +120,7 @@ def computeTangentVectorToPolygon(P, q, tolerance):
         far = False
         if min_d > 1.5*tolerance:
             far = True
-            far_factor = 0.5
+            far_factor = 0.55
         for i in range(num_P):
             d, w = computeDistancePointToSegment(q, P[i], P[(i+1) % num_P])
             if min_d == d:

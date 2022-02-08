@@ -54,7 +54,10 @@ def pub_goal(next, dir):  # replace true with termination condition
     wp = MoveXYGoal()
     wp.pose_dest.x = next.x
     wp.pose_dest.y = next.y
-    wp.pose_dest.theta = np.atan2(dir.y,dir.x) + np.pi  # theta is the orientation of robot in radians (0 to 2pi)
+    temp = np.arctan2(dir.y, dir.x)
+    if temp < 0 :
+        temp += 2*np.pi
+    wp.pose_dest.theta = temp  # theta is the orientation of robot in radians (0 to 2pi)
 
     # send waypoint to turtlebot3 via move_xy server
     client.send_goal(wp)
@@ -108,7 +111,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                     next_pos = current_pos + dir
                     current_pos,_ = pub_goal(next_pos, dir)
                     path.append(current_pos)
-                rospy.loginfo("Hit: ", hit, mindist, minp[0])
+                rospy.loginfo("Hit: %r with distance %f from polygon (%f,%f)", hit, mindist, minp[0].x, minp[0].y)
                 # circumcircle the obstacle, storing min dist to the goal
                 obs_s = current_pos
                 min_goal_pos = obs_s
@@ -129,7 +132,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                         return 'circumventing Failure', path
                     dir, outside = computeTangentVectorToPolygon(minp, current_pos,tolerance)
                     if not outside:
-                        rospy.loginfo("Inside virtual obstacle: ", j)
+                        rospy.loginfo("Inside virtual obstacle: %d", j)
                     next_pos = dir.multi(stepsize) + current_pos
                     # Didn't Check collision while circumventing obstacle
                     current_pos,_ = pub_goal(next_pos, dir)
@@ -137,6 +140,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                     if GoalDist(min_goal_pos) > GoalDist(current_pos):
                         min_goal_pos = current_pos
                 # circumvent the obstacle untill minDist point is found
+                rospy.loginfo("Done circumventing.Going towards minDist point.")
                 j = 0
                 while (current_pos - min_goal_pos).norm() > tolerance:
                     j += 1
@@ -145,11 +149,14 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                         return 'Circumventing towards min_pos failure', path
                     dir, outside = computeTangentVectorToPolygon(minp, current_pos,tolerance)
                     if not outside:
-                        rospy.loginfo("Inside virtual obstacle: ", j)
+                        rospy.loginfo("Inside virtual obstacle: %d", j)
                     next_pos = dir.multi(stepsize) + current_pos
                     # Didn't Check collision while circumventing obstacle
                     current_pos,_ = pub_goal(next_pos, dir)
                     path.append(current_pos)
+                current_pos, _ = pub_goal(min_goal_pos, min_goal_pos - current_pos)
+                rospy.loginfo("Reached minDistPoint Going towards goal.")
+                path.append(current_pos)
                 next_pos = TowardsGoal(current_pos)
                 hit, _, _ = min_obs_Clearance(next_pos)
                 if hit:
