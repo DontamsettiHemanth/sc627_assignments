@@ -58,15 +58,15 @@ def pub_goal(next, dir):
     # send waypoint to turtlebot3 via move_xy server
     client.send_goal(wp)
     timeout = 15.0
-    done = client.wait_for_result(rospy.Duration(secs = timeout))
+    done = client.wait_for_result(rospy.Duration(secs=timeout))
     if not done:
         rospy.loginfo("Couldn't complete goal %r! Sending a Goal along the dir vector %r", str(next), str(dir))
         dir = dir.multi(1/dir.norm())
         wp.pose_dest.x -= dir.x*tolerance*0.5
         wp.pose_dest.y -= dir.y*tolerance*0.5
         client.send_goal(wp)  # change angle also if didn't work
-        if not (client.wait_for_result(rospy.Duration(secs = timeout))):
-            rospy.logwarn("Couldn't go to %r in %r seconds", str(next), timeout)
+        if not (client.wait_for_result(rospy.Duration(secs=timeout))):
+            rospy.logwarn("Couldn't go to %r in %r secs", str(next), timeout)
     # getting updated robot location
     result = client.get_result()
     return point(result.pose_final.x, result.pose_final.y), result.pose_final.theta
@@ -79,19 +79,21 @@ def bugbase(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
     f = '/root/catkin_ws/src/sc627_assignments/assignment_1/output_base.txt'
     while point.dist(current_position, goal) > stepsize:
         candidate_current_position = dir.multi(stepsize/dir.norm()) + current_position
-        if len(obstacles)>0:
+        if len(obstacles) > 0:
             dists = []
             for P in obstacles:  # compute distance from candidate-current-position to each obstacle
                 dists.append(computeDistancePointToPolygon(P, candidate_current_position))
-            if min(dists) < tolerance :
+            if min(dists) < tolerance:
                 gen_Output(f, path)
                 return "Failure: There is an obstacle lying between the start and goal", path
-        current_position,_ = pub_goal(candidate_current_position, dir)
+        current_position, _ = pub_goal(candidate_current_position, dir)
         path.append(current_position)
-    current_position,_ = pub_goal(goal, point(0, 0))  # Last step to goal apparently
+    current_position, _ = pub_goal(goal, point(0, 0))  # Last step to goal apparently
     path.append(current_position)
     gen_Output(f, path)
     return "Success!!!", path
 
-Final_Status, _ = bugbase()
-rospy.loginfo(Final_Status)
+start_time = rospy.get_time()
+Final_Status,  _ = bugbase()
+end_time = rospy.get_time()
+rospy.loginfo("%r, Took %r mins %r secs", Final_Status , (end_time - start_time)//60, (end_time - start_time)%60)

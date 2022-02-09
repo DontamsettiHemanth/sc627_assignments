@@ -138,7 +138,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                         rospy.loginfo("Inside virtual obstacle at step %d", j)
                     next_pos = dir.multi(stepsize) + current_pos
                     # Didn't Check collision while circumventing obstacle
-                    current_pos,_ = pub_goal(next_pos, dir)
+                    current_pos, _ = pub_goal(next_pos, dir)
                     path.append(current_pos)
                     if GoalDist(min_goal_pos) > GoalDist(current_pos):
                         min_goal_pos = current_pos
@@ -178,6 +178,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
     gen_Output(f, path)
     return "Success", path
 
-
+start_time = rospy.get_time()
 Final_Status, _ = bug1()
-rospy.loginfo(Final_Status)
+end_time = rospy.get_time()
+rospy.loginfo("%r, Took %r mins %r secs", Final_Status , (end_time - start_time)//60, (end_time - start_time)%60)
