@@ -7,4 +7,5 @@ if __name__ == "__main__":
     rospy.sleep(1)
     rospy.logerr("Hit")
     rospy.logwarn("Hit")
+    exit(1)
     rospy.spin()

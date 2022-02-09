@@ -67,7 +67,9 @@ def pub_goal(next, dir):
         wp.pose_dest.y -= dir.y*tolerance*0.5
         client.send_goal(wp)  # change angle also if didn't work
         if not (client.wait_for_result(rospy.Duration(secs = timeout))):
-            rospy.logwarn("Couldn't go to %r in %r seconds", str(next), timeout)
+            rospy.logerr("Couldn't go to %r in %r seconds", str(next), timeout)
+            rospy.logwarn("Didn't write path of this simulation to output file")
+            exit(1)
     # getting updated robot location
     result = client.get_result()
     return point(result.pose_final.x, result.pose_final.y), result.pose_final.theta
