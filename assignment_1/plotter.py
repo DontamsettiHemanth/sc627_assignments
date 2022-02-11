@@ -27,7 +27,6 @@ if plot_polygons:
         obstacles.append(P)
 
     for P in obstacles:
-        # plt.Figure(1)
         polygon = plt.Polygon(P, facecolor='k')
         ax.add_patch(polygon)
     # Importing path
@@ -39,17 +38,29 @@ if plot_polygons:
             x, y = i.split(",")
             X.append(change(x))
             Y.append(change(y))
+    pathLength = 0
+    for i in range(len(X)-1):
+        pathLength += np.sqrt((X[i+1]-X[i])**2 + (Y[i+1]-Y[i])**2)
     # plt.Figure(1)
     ax.plot(X, Y)
+    plt.title(f"Trace of the path\n Total length of path is {pathLength:.2f}m")
+    plt.xlabel("Global - x")
+    plt.ylabel("Global - y")
     fig.savefig('./WorkingROS.png')
 # initializing a figure in
 # which the graph will be plotted
 fig = plt.figure()
 
 # marking the x-axis and y-axis
-axis = plt.axes(xlim=(-1, 11),
-				ylim=(-1, 11))
+axis = plt.axes()#xlim=(-1, 6), ylim=(-1, 5))
 
+for P in obstacles:
+    polygon = plt.Polygon(P, facecolor='k')
+    axis.add_patch(polygon)
+
+plt.title(f"Trace of the path\n Total length of path is {pathLength:.2f}m")
+plt.xlabel("Global - x")
+plt.ylabel("Global - y")
 # initializing a line variable
 line, = axis.plot([], [], lw=1.5)
 
