@@ -30,7 +30,7 @@ if plot_polygons:
         polygon = plt.Polygon(P, facecolor='k')
         ax.add_patch(polygon)
     # Importing path
-    with open("output_1.txt", "r") as f:
+    with open("output.txt", "r") as f:
         lines = f.readlines()
         X = []
         Y = []
@@ -46,7 +46,7 @@ if plot_polygons:
     plt.title(f"Trace of the path\n Total length of path is {pathLength:.2f}m")
     plt.xlabel("Global - x")
     plt.ylabel("Global - y")
-    fig.savefig('./WorkingROS.png')
+    fig.savefig('WorkingROS.png')
 # initializing a figure in
 # which the graph will be plotted
 fig = plt.figure()
@@ -85,6 +85,6 @@ anim = FuncAnimation(fig, animate, init_func = init,
 					frames = max_frames, interval = 20, blit = True)
 
 
-anim.save('bug_1motion_ROS.mp4', writer = 'ffmpeg', fps = 10)
+anim.save('PotentialFunction_ROS.mp4', writer = 'ffmpeg', fps = 10)
 
 
