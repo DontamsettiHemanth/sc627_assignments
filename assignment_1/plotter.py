@@ -43,6 +43,7 @@ if plot_polygons:
         pathLength += np.sqrt((X[i+1]-X[i])**2 + (Y[i+1]-Y[i])**2)
     # plt.Figure(1)
     ax.plot(X, Y)
+    ax.plot(start[0], start[-1],'ro',goal[0],goal[-1], "go", lw = 1.2)
     plt.title(f"Trace of the path\n Total length of path is {pathLength:.2f}m")
     plt.xlabel("Global - x")
     plt.ylabel("Global - y")
@@ -52,12 +53,12 @@ if plot_polygons:
 fig = plt.figure()
 
 # marking the x-axis and y-axis
-axis = plt.axes()#xlim=(-1, 6), ylim=(-1, 5))
+axis = plt.axes(xlim=(-1, 6), ylim=(-1, 5))
 
 for P in obstacles:
     polygon = plt.Polygon(P, facecolor='k')
     axis.add_patch(polygon)
-
+axis.plot(start[0], start[-1],'ro',goal[0],goal[-1], "go", lw = 1.2)
 plt.title(f"Trace of the path\n Total length of path is {pathLength:.2f}m")
 plt.xlabel("Global - x")
 plt.ylabel("Global - y")
@@ -66,7 +67,7 @@ line, = axis.plot([], [], lw=1.5)
 
 # data which the line will
 # contain (x, y)
-n_steps = 10
+n_steps = 7
 def init():
     line.set_data(X[0:n_steps], Y[0:n_steps])
     return line,
