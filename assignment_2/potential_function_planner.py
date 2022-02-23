@@ -44,7 +44,7 @@ result = MoveXYResult()
 result.pose_final.x = start.x
 result.pose_final.y = start.y
 result.pose_final.theta = 0  # in radians (0 to 2pi)
-
+np.random.seed(0)
 
 def pub_goal(next, dir, f, path):
 
@@ -63,8 +63,9 @@ def pub_goal(next, dir, f, path):
     if not done:
         rospy.loginfo("Couldn't complete goal %r! Sending a Goal along the dir vector %r", str(next), str(dir))
         dir.normalize()
-        wp.pose_dest.x -= dir.x*stepsize*0.5
-        wp.pose_dest.y -= dir.y*stepsize*0.5
+        wp.pose_dest.x -= dir.x*stepsize*0.5 + np.random.random()*0.3*stepsize
+        wp.pose_dest.y -= dir.y*stepsize*0.5 + np.random.random()*0.3*stepsize
+        rospy.loginfo("theta is %r deg",temp*180/np.pi)
         client.send_goal(wp)  # change angle also if didn't work
         done = client.wait_for_result(rospy.Duration(secs=timeout))
         if not done:
@@ -112,26 +113,30 @@ def potential_mover(start=start, goal=goal, obstacles=obstacles, stepsize=stepsi
     f = '/root/catkin_ws/src/sc627_assignments/assignment_2/output.txt'
     max_steps = 200
     j = 1
-    while (GoalDist(current_pos) > 2*stepsize) and (j < max_steps):
+    while (GoalDist(current_pos) > 3*stepsize) and (j < max_steps):
         dir = F_attract(current_pos) + F_repulse(current_pos)
         dir.normalize()
         next_pos = dir.multi(stepsize) + current_pos
         current_pos, _ = pub_goal(next_pos, dir, f, path)
         path.append(current_pos)
         j += 1
-        if j%100 ==0:
-            rospy.loginfo("Took %r steps from start. Not THE END.",j)
+        if j % 100 == 0:
+            rospy.loginfo("Took %r steps from start. Not THE END.", j)
     if j < max_steps:
         rospy.loginfo("Almost reached the goal")
-        current_pos, _ = pub_goal(goal, (goal - current_pos), f, path)
-        path.append(current_pos)
+        dir = goal - current_pos
+        dir.normalize()
+        while GoalDist(current_pos) > stepsize:
+            next = dir.multi(stepsize) + current_pos
+            current_pos, _ = pub_goal(next, dir, f, path)
+            path.append(current_pos)
         current_pos, _ = pub_goal(goal, point(0, 0), f, path)
         path.append(current_pos)
         gen_Output(f, path)
         return 'Success', path
     else:
         gen_Output(f, path)
-        return "Failure : took more than %r steps".format(max_steps), path
+        return "Failure : took more than {} steps".format(max_steps), path
 
 
 start_time = rospy.get_time()

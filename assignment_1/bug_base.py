@@ -34,7 +34,7 @@ with open("/root/catkin_ws/src/sc627_assignments/assignment_1/input.txt", 'r') a
     tolerance = stepsize*0.5
 
 
-rospy.init_node('bugbase', anonymous = True)
+rospy.init_node('bugbase', anonymous=True)
 
 # Initialize client
 client = actionlib.SimpleActionClient('move_xy', MoveXYAction)
