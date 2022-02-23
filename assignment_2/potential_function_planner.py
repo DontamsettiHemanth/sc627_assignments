@@ -30,7 +30,8 @@ with open(inf, 'r') as f:
             P.append(temp)
 
         i += 1
-    obstacles.append(P)
+    if len(P) != 0:
+        obstacles.append(P)
     tolerance = stepsize*0.5
 
 
