@@ -58,11 +58,11 @@ def pub_goal(next, dir, f, path):
 
     # send waypoint to turtlebot3 via move_xy server
     client.send_goal(wp)
-    timeout = 15.0
+    timeout = 25.0
     done = client.wait_for_result(rospy.Duration(secs=timeout))
     if not done:
         rospy.loginfo("Couldn't complete goal %r! Sending a Goal along the dir vector %r", str(next), str(dir))
-        dir = dir.multi(1/dir.norm())
+        dir.normalize()
         wp.pose_dest.x -= dir.x*stepsize*0.5
         wp.pose_dest.y -= dir.y*stepsize*0.5
         client.send_goal(wp)  # change angle also if didn't work
@@ -86,7 +86,9 @@ def F_attract(q, goal=goal):
     if d <= 2:  # d*_goal = 2
         return (goal - q).multi(zeta)
     else:
-        return (goal - q).multi(2*zeta/d)
+        unit_goal = goal - q
+        unit_goal.normalize()
+        return unit_goal.multi(2*zeta)
 
 
 def F_repulse(q, obstacles=obstacles):
@@ -112,7 +114,8 @@ def potential_mover(start=start, goal=goal, obstacles=obstacles, stepsize=stepsi
     j = 1
     while (GoalDist(current_pos) > 2*stepsize) and (j < max_steps):
         dir = F_attract(current_pos) + F_repulse(current_pos)
-        next_pos = dir.multi(stepsize/dir.norm()) + current_pos
+        dir.normalize()
+        next_pos = dir.multi(stepsize) + current_pos
         current_pos, _ = pub_goal(next_pos, dir, f, path)
         path.append(current_pos)
         j += 1

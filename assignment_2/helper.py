@@ -14,6 +14,10 @@ class point:
     def __add__(self, other):
         return point(self.x + other.x, self.y + other.y)
 
+    def __str__(self):
+        a = '{},{}'.format(self.x, self.y)
+        return a
+
     def dot(self, q):
         return self.x*q.x + self.y*q.y*1.0
 
@@ -26,9 +30,15 @@ class point:
     def dist(self, q):
         return np.sqrt((q.x-self.x)**2+(q.y-self.y)**2*1.0)
 
-    def __str__(self):
-        a = '{},{}'.format(self.x, self.y)
-        return a
+    def normalize(self):
+        n2 = self.norm()
+        if n2==0:
+            # print "norm = 0; didn't normalize ({})".format(str(self))
+            return
+        temp = self.multi(1.0/n2)
+        self.x = temp.x
+        self.y = temp.y
+        return None
 
 
 def computeLineThroughTwoPoints(p1, p2):
@@ -127,17 +137,17 @@ def computeNearestVectorTowardsPolygon(P,q):
         d, w = computeDistancePointToSegment(q, P[i], P[(i+1) % num_P])
         if min_d == d:
             d0 = (P[(i+1) % num_P]-P[i])
-            d0 = d0.multi(1/d0.norm())
+            d0.normalize()
             n0 = point(-d0.y, d0.x)
             if w == 0:
-                return n0.multi(d/n0.norm())
+                return n0.multi(d)
             elif w == 1:
                 d1 = q - P[i]
-                d1 = d1.multi(1.0/d1.norm())
+                d1.normalize()
                 return d1.multi(-d)
             elif w == 2:
                 d2 = q - P[(i+1) % num_P]
-                d2 = d2.multi(1.0/d2.norm())
+                d2.normalize()
                 return d2.multi(-d)
 
 
@@ -161,28 +171,31 @@ def computeTangentVectorToPolygon(P, q, tolerance):
             d, w = computeDistancePointToSegment(q, P[i], P[(i+1) % num_P])
             if min_d == d:
                 d0 = (P[(i+1) % num_P]-P[i])
-                d0 = d0.multi(1/d0.norm())
+                d0.normalize()
                 n0 = point(-d0.y, d0.x)
                 if w == 0:
                     if far:
                         new = d0+n0
-                        return new.multi(far_factor/new.norm()), 1
+                        new.normalize()
+                        return new.multi(far_factor), 1
                     return d0, 1
                 elif w == 1:
                     d1 = q - P[i]
-                    d1 = d1.multi(1.0/d1.norm())
+                    d1.normalize()
                     n1 = point(-d1.y, d1.x)
                     if far:
                         new = n1 - d1
-                        return new.multi(far_factor/new.norm()), 1
+                        new.normalize()
+                        return new.multi(far_factor), 1
                     return n1, 1
                 elif w == 2:
                     d2 = q - P[(i+1) % num_P]
-                    d2 = d2.multi(1.0/d2.norm())
+                    d2.normalize()
                     n2 = point(-d2.y, d2.x)
                     if far:
                         new = n2 - d2
-                        return new.multi(far_factor/new.norm()), 1
+                        new.normalize()
+                        return new.multi(far_factor), 1
                     return n2, 1
 
     else:
@@ -198,7 +211,8 @@ def computeTangentVectorToPolygon(P, q, tolerance):
 
         d0 = P[(minargs[0]+1) % num_P] - P[minargs[0]]
         n0 = point(d0.y, -d0.x)
-        n0 = n0.multi(0.5/n0.norm())
+        n0.normalize()
+        n0 = n0.multi(0.5)
         # unit vector perpendicular to nearest edge of polygon
         return n0, 0
 
