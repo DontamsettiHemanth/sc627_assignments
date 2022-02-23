@@ -30,7 +30,8 @@ with open("/root/catkin_ws/src/sc627_assignments/assignment_1/input.txt", 'r') a
             P.append(temp)
 
         i += 1
-    obstacles.append(P)
+    if len(P)!=0:
+        obstacles.append(P)
     tolerance = stepsize*0.5
 
 

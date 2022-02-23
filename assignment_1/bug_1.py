@@ -30,7 +30,8 @@ with open(inf, 'r') as f:
             P.append(temp)
 
         i += 1
-    obstacles.append(P)
+    if len(P)!=0:
+        obstacles.append(P)
     tolerance = stepsize*0.5
 
 
@@ -148,7 +149,7 @@ def bug1(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
                 # circumvent the obstacle untill minDist point is found
                 rospy.loginfo("Done circumventing after %r steps.Going towards minDist point.", j)
                 j = 0
-                while (current_pos - min_goal_pos).norm() > tolerance:
+                while (current_pos - min_goal_pos).norm() > 1.5*tolerance:
                     j += 1
                     if j % 5000 == 0:
                         gen_Output(f, path)
