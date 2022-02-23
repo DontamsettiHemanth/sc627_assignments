@@ -62,7 +62,7 @@ def pub_goal(next, dir):
     done = client.wait_for_result(rospy.Duration(secs = timeout))
     if not done:
         rospy.loginfo("Couldn't complete goal %r! Sending a Goal along the dir vector %r", str(next), str(dir))
-        dir = dir.multi(1/dir.norm())
+        dir.normalize()
         wp.pose_dest.x -= dir.x*tolerance*0.5
         wp.pose_dest.y -= dir.y*tolerance*0.5
         client.send_goal(wp)  # change angle also if didn't work
@@ -81,7 +81,8 @@ def GoalDist(pos, goal=goal):
 
 def TowardsGoal(pos, goal=goal):
     dir = goal - pos
-    return dir.multi(stepsize/dir.norm()) + pos
+    dir.normalize()
+    return dir.multi(stepsize) + pos
 
 
 def min_obs_Clearance(pos, obstacles=obstacles):

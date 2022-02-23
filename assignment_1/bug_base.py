@@ -61,7 +61,7 @@ def pub_goal(next, dir):
     done = client.wait_for_result(rospy.Duration(secs=timeout))
     if not done:
         rospy.loginfo("Couldn't complete goal %r! Sending a Goal along the dir vector %r", str(next), str(dir))
-        dir = dir.multi(1/dir.norm())
+        dir.normalize()
         wp.pose_dest.x -= dir.x*tolerance*0.5
         wp.pose_dest.y -= dir.y*tolerance*0.5
         client.send_goal(wp)  # change angle also if didn't work
@@ -76,9 +76,10 @@ def bugbase(start=start, goal=goal, obstacles=obstacles, stepsize=stepsize):
     current_position = start
     path = [start]
     dir = goal - current_position
+    dir.normalize()
     f = '/root/catkin_ws/src/sc627_assignments/assignment_1/output_base.txt'
     while point.dist(current_position, goal) > stepsize:
-        candidate_current_position = dir.multi(stepsize/dir.norm()) + current_position
+        candidate_current_position = dir.multi(stepsize) + current_position
         if len(obstacles) > 0:
             dists = []
             for P in obstacles:  # compute distance from candidate-current-position to each obstacle
