@@ -125,12 +125,18 @@ def potential_mover(start=start, goal=goal, obstacles=obstacles, stepsize=stepsi
             rospy.loginfo("Took %r steps from start. Not THE END.", j)
     if j < max_steps:
         rospy.loginfo("Almost reached the goal")
-        dir = goal - current_pos
-        dir.normalize()
-        while GoalDist(current_pos) > stepsize:
-            next = dir.multi(stepsize) + current_pos
-            current_pos, _ = pub_goal(next, dir, f, path)
+        while (GoalDist(current_pos) > stepsize):
+            dir = F_attract(current_pos)
+            dir.normalize()
+            next_pos = dir.multi(stepsize) + current_pos
+            current_pos, _ = pub_goal(next_pos, dir, f, path)
             path.append(current_pos)
+        # dir = goal - current_pos
+        # dir.normalize()
+        # while GoalDist(current_pos) > stepsize:
+        #     next = dir.multi(stepsize) + current_pos
+        #     current_pos, _ = pub_goal(next, dir, f, path)
+        #     path.append(current_pos)
         current_pos, _ = pub_goal(goal, point(0, 0), f, path)
         path.append(current_pos)
         gen_Output(f, path)
