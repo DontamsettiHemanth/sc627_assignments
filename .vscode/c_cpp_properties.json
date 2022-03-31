@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/root/catkin_ws/devel/include/**",
+        "/root/stride_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/root/stride_ws/src/champ_stride/champ/champ/include/**",
+        "/root/stride_ws/src/champ_stride/champ/champ_base/include/**",
+        "/root/stride_ws/src/champ_stride/champ/champ_config/include/**",
+        "/root/stride_ws/src/towr/towr/include/**",
+        "/root/stride_ws/src/towr/towr_ros/include/**",
+        "/root/catkin_ws/src/turtlebot3_simulations/turtlebot3_fake/include/**",
+        "/root/catkin_ws/src/turtlebot3_simulations/turtlebot3_gazebo/include/**",
+        "/root/catkin_ws/src/turtlebot3/turtlebot3_slam/include/**",
+        "/root/stride_ws/src/champ_stride/yocs_velocity_smoother/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
