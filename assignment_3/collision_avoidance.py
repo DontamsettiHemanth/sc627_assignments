@@ -82,7 +82,6 @@ class velocity_obstacles:
         Get robot data
         '''
         theta = 2*np.arctan2(data.pose.pose.orientation.z, data.pose.pose.orientation.w)
-        # print theta
         x = np.array([data.pose.pose.position.x, data.pose.pose.position.y])
         v = np.array([data.twist.twist.linear.x, data.twist.twist.linear.y])
         self.bot_xv = {'x': x, 'th': theta, 'v': v, 'w': data.twist.twist.angular.z}
