@@ -11,7 +11,7 @@ VEL_MAX = 0.15
 rospy.init_node('assign4', anonymous=True)
 
 
-def velocity_convert(x, y, theta, vel_x, vel_y):
+def velocity_convert(theta, vel_x, vel_y):
     '''
     Robot pose (x, y, theta)  Note - theta in (0, 2pi)
     Velocity vector (vel_x, vel_y)
@@ -94,7 +94,10 @@ class Decentralised_bot:
         '''
         if (self.lbot is None) or (self.rbot is None) or (self.bot is None):
             rospy.loginfo("self.bot/rbot/lbot is None")
+            vel_msg = Twist()
+            bot_i.pub_vel.publish(vel_msg)
             return
+
         mid = 0.5*(self.lbot['x'] + self.rbot['x'])
         PO = mid - self.bot['x']
         dist = np.sqrt(sum(PO*PO))
