@@ -79,7 +79,7 @@
     
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_2) -x $(arg bot_2_x_pos) -y $(arg bot_2_y_pos) -z $(arg bot_2_z_pos) -Y $(arg bot_2_yaw) -param robot_description" />
     
-    <node pkg="sc627_assignments" type="balancing.py" name="balancing">
+    <node pkg="sc627_assignments" type="balancing.py" name="balancing1">
       <remap from="/odom" to="/$(arg bot_2)/odom"/>
       <remap from="/cmd_vel" to="/$(arg bot_2)/cmd_vel"/>
       <remap from="/left_odom" to="/$(arg bot_1)/odom"/>
@@ -97,7 +97,7 @@
     
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_3) -x $(arg bot_3_x_pos) -y $(arg bot_3_y_pos) -z $(arg bot_3_z_pos) -Y $(arg bot_3_yaw) -param robot_description" />
     
-    <node pkg="sc627_assignments" type="balancing.py" name="balancing">
+    <node pkg="sc627_assignments" type="balancing.py" name="balancing2">
       <remap from="/odom" to="/$(arg bot_3)/odom"/>
       <remap from="/cmd_vel" to="/$(arg bot_3)/cmd_vel"/>
       <remap from="/left_odom" to="/$(arg bot_2)/odom"/>
@@ -115,7 +115,7 @@
     
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_4) -x $(arg bot_4_x_pos) -y $(arg bot_4_y_pos) -z $(arg bot_4_z_pos) -Y $(arg bot_4_yaw) -param robot_description" />
     
-    <node pkg="sc627_assignments" type="balancing.py" name="balancing">
+    <node pkg="sc627_assignments" type="balancing.py" name="balancing3">
       <remap from="/odom" to="/$(arg bot_4)/odom"/>
       <remap from="/cmd_vel" to="/$(arg bot_4)/cmd_vel"/>
       <remap from="/left_odom" to="/$(arg bot_3)/odom"/>
@@ -133,7 +133,7 @@
     
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_5) -x $(arg bot_5_x_pos) -y $(arg bot_5_y_pos) -z $(arg bot_5_z_pos) -Y $(arg bot_5_yaw) -param robot_description" />
     
-    <node pkg="sc627_assignments" type="balancing.py" name="balancing">
+    <node pkg="sc627_assignments" type="balancing.py" name="balancing4">
       <remap from="/odom" to="/$(arg bot_5)/odom"/>
       <remap from="/cmd_vel" to="/$(arg bot_5)/cmd_vel"/>
       <remap from="/left_odom" to="/$(arg bot_4)/odom"/>
@@ -151,7 +151,7 @@
     
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_6) -x $(arg bot_6_x_pos) -y $(arg bot_6_y_pos) -z $(arg bot_6_z_pos) -Y $(arg bot_6_yaw) -param robot_description" />
 
-    <node pkg="sc627_assignments" type="balancing.py" name="balancing">
+    <node pkg="sc627_assignments" type="balancing.py" name="balancing5">
       <remap from="/odom" to="/$(arg bot_6)/odom"/>
       <remap from="/cmd_vel" to="/$(arg bot_6)/cmd_vel"/>
       <remap from="/left_odom" to="/$(arg bot_5)/odom"/>
@@ -169,7 +169,7 @@
     
     <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg bot_7) -x $(arg bot_7_x_pos) -y $(arg bot_7_y_pos) -z $(arg bot_7_z_pos) -Y $(arg bot_7_yaw) -param robot_description" />
 
-    <node pkg="sc627_assignments" type="balancing.py" name="balancing">
+    <node pkg="sc627_assignments" type="balancing.py" name="balancing6">
       <remap from="/odom" to="/$(arg bot_7)/odom"/>
       <remap from="/cmd_vel" to="/$(arg bot_7)/cmd_vel"/>
       <remap from="/left_odom" to="/$(arg bot_6)/odom"/>
