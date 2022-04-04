@@ -30,6 +30,33 @@ def velocity_convert(theta, vel_x, vel_y):
     return v_lin, v_ang
 
 
+def vc(theta, vel_x, vel_y):
+    gain_ang = 1  # modify if necessary
+
+    ang = np.arctan2(vel_y, vel_x)
+    ang_err = ang - theta
+    if ang_err < -np.pi:
+        ang_err += 2*np.pi
+    elif ang_err > np.pi:
+        ang_err -= 2*np.pi
+    if abs(ang_err) < np.pi/2:
+        ang_err2 = min(max(ang_err, -ANG_MAX), ANG_MAX)
+        v_lin = min(max(math.cos(ang_err2) * math.sqrt(vel_x**2 + vel_y**2), -VEL_MAX), VEL_MAX)
+        v_ang = gain_ang * ang_err2
+        return v_lin, v_ang
+    else:
+        if ang_err < 0:
+            ang_err2 = min(max(ang_err+np.pi, -ANG_MAX), ANG_MAX)
+            v_lin = min(max(-math.cos(ang_err2) * math.sqrt(vel_x**2 + vel_y**2), -VEL_MAX), VEL_MAX)
+            v_ang = gain_ang * ang_err2
+            return v_lin, v_ang
+        elif ang_err > 0:
+            ang_err2 = min(max(ang_err-np.pi, -ANG_MAX), ANG_MAX)
+            v_lin = min(max(-math.cos(ang_err2) * math.sqrt(vel_x**2 + vel_y**2), -VEL_MAX), VEL_MAX)
+            v_ang = gain_ang * ang_err2
+            return v_lin, v_ang
+
+
 class Decentralised_bot:
     def __init__(self):
         self.t = 0
@@ -108,7 +135,8 @@ class Decentralised_bot:
             self.pub_vel.publish(vel_msg)
             return
         self.num = 0
-        v_lin, v_ang = self.velocity_convert(PO)
+        v_lin, v_ang = vc(self.bot['th'], PO[0], PO[1])
+        # v_lin, v_ang = vc(self.bot['th'], PO[0], 0)  # To restrict to x-axis
         # publishing the velocities
         vel_msg = Twist()
         vel_msg.linear.x = v_lin
