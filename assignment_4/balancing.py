@@ -11,25 +11,6 @@ VEL_MAX = 0.15
 rospy.init_node('assign4', anonymous=True)
 
 
-def velocity_convert(theta, vel_x, vel_y):
-    '''
-    Robot pose (x, y, theta)  Note - theta in (0, 2pi)
-    Velocity vector (vel_x, vel_y)
-    '''
-
-    gain_ang = 1  # modify if necessary
-
-    ang = math.atan2(vel_y, vel_x)
-    if ang < 0:
-        ang += 2 * math.pi
-
-    ang_err = min(max(ang - theta, -ANG_MAX), ANG_MAX)
-
-    v_lin = min(max(math.cos(ang_err) * math.sqrt(vel_x**2 + vel_y**2), -VEL_MAX), VEL_MAX)
-    v_ang = gain_ang * ang_err
-    return v_lin, v_ang
-
-
 def vc(theta, vel_x, vel_y):
     gain_ang = 1  # modify if necessary
 
@@ -102,23 +83,6 @@ class Decentralised_bot:
         v = np.array([data.twist.twist.linear.x, data.twist.twist.linear.y])
         self.rbot = {'x': x, 'th': theta, 'v': v, 'w': data.twist.twist.angular.z}
 
-    def velocity_convert(self, vel):
-        '''
-        Velocity vector vel = (vel_x, vel_y)
-        '''
-        theta = self.bot['th']
-        vel_x, vel_y = vel
-
-        gain_ang = 1  # modify if necessary
-
-        ang = np.arctan2(vel_y, vel_x)
-
-        ang_err = min(max(ang - theta, -ANG_MAX), ANG_MAX)
-
-        v_lin = min(max(math.cos(ang_err) * math.sqrt(vel_x**2 + vel_y**2), -VEL_MAX), VEL_MAX)
-        v_ang = gain_ang * ang_err
-        return v_lin, v_ang
-
     def consensus(self):
         '''
         Move to midpoint of l and r bots
@@ -186,4 +150,3 @@ with open("/root/catkin_ws/src/sc627_assignments/assignment_4/output{}.txt".form
         file.write(str(p)[1:-1])
         pass
     file.write("\n")
-# exit(1)
