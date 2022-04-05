@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+# TODO : use velocity of lbot, rbot to check  concensus
 import rospy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
@@ -59,6 +59,9 @@ def vc(theta, vel_x, vel_y):
 
 class Decentralised_bot:
     def __init__(self):
+        now = rospy.Time.now()
+        self.StartTime = now.secs
+        self.PresTime = now.secs
         self.t = 0
         self.num = 0  # concensus number
         self.tolerance = 0.01
@@ -87,7 +90,8 @@ class Decentralised_bot:
         '''
         theta = 2*np.arctan2(data.pose.pose.orientation.z, data.pose.pose.orientation.w)
         x = np.array([data.pose.pose.position.x, data.pose.pose.position.y])
-        self.lbot = {'x': x, 'th': theta}
+        v = np.array([data.twist.twist.linear.x, data.twist.twist.linear.y])
+        self.lbot = {'x': x, 'th': theta, 'v': v, 'w': data.twist.twist.angular.z}
 
     def callback_right_odom(self, data):
         '''
@@ -95,7 +99,8 @@ class Decentralised_bot:
         '''
         theta = 2*np.arctan2(data.pose.pose.orientation.z, data.pose.pose.orientation.w)
         x = np.array([data.pose.pose.position.x, data.pose.pose.position.y])
-        self.rbot = {'x': x, 'th': theta}
+        v = np.array([data.twist.twist.linear.x, data.twist.twist.linear.y])
+        self.rbot = {'x': x, 'th': theta, 'v': v, 'w': data.twist.twist.angular.z}
 
     def velocity_convert(self, vel):
         '''
@@ -128,8 +133,11 @@ class Decentralised_bot:
         mid = 0.5*(self.lbot['x'] + self.rbot['x'])
         PO = mid - self.bot['x']
         dist = np.sqrt(sum(PO*PO))
-        if dist < self.tolerance:
-            self.num += 1
+        velL = np.sqrt(sum(self.lbot['v']*self.lbot['v'])+(self.lbot['w']*self.lbot['w']))
+        velR = np.sqrt(sum(self.rbot['v']*self.rbot['v'])+(self.rbot['w']*self.rbot['w']))
+        if (dist < 0.1*self.tolerance) and (velL < 0.1*self.tolerance) and (velR < 0.1*self.tolerance):
+            if self.t > 5:
+                self.num += 1
             # publishing zero velocities
             vel_msg = Twist()
             self.pub_vel.publish(vel_msg)
@@ -147,9 +155,9 @@ class Decentralised_bot:
 r = rospy.Rate(30)
 bot_i = Decentralised_bot()
 path = []
-i = 0
-while i < 1e5:
-    i += 1
+# i = 0
+# while i < 1e5:
+#     i += 1
 
 vel_msg = Twist()
 bot_i.pub_vel.publish(vel_msg)
@@ -169,11 +177,13 @@ if (~rospy.is_shutdown()):
     rospy.loginfo("Success : Reached the goal")
 else:
     rospy.logwarn("Failure : Stopped by interruption")
+file_name = rospy.get_name()
+file_name = file_name[7:]
 
-with open("/root/catkin_ws/src/sc627_assignments/assignment_4/output.txt", "a") as file:
+with open("/root/catkin_ws/src/sc627_assignments/assignment_4/output{}.txt".format(file_name), "w") as file:
     for p in path:
         file.write("\n")
         file.write(str(p)[1:-1])
         pass
     file.write("\n")
-exit(1)
+# exit(1)
