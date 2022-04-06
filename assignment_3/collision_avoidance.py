@@ -35,36 +35,12 @@ class velocity_obstacles:
 
         self.pub_vel = rospy.Publisher('/bot_1/cmd_vel', Twist, queue_size=10)
 
-    def velocity_convert2(self, x, y, theta, vel_x, vel_y):
-        '''
-        Robot pose (x, y, theta)  Note - theta in (0, 2pi)
-        Velocity vector (vel_x, vel_y)
-        '''
-
-        # if theta < 0:
-        #     theta += 2 * math.pi
-
-        gain_ang = 1  # modify if necessary
-
-        ang = np.arctan2(vel_y, vel_x)
-        # if ang < 0:
-        #     ang += 2 * math.pi
-
-        ang_err = min(max(ang - theta, -ANG_MAX), ANG_MAX)
-
-        v_lin = min(max(math.cos(ang_err) * math.sqrt(vel_x ** 2 + vel_y ** 2), -VEL_MAX), VEL_MAX)
-        v_ang = gain_ang * ang_err
-        return v_lin, v_ang
-
     def velocity_convert(self, v, th_rel):
         '''
         Velocity vector (||vel||, (th_new - th_old) )
         '''
 
-        gain_ang = 1  # modify if necessary
-        # if sum(self.Goal_rel*self.Goal_rel) < 0.25**2:
-        #     self.VEL_MAX = 0.05
-
+        gain_ang = 1
         ang_err = min(max(th_rel, -ANG_MAX), ANG_MAX)
         v_lin = min(max(math.cos(ang_err)*v, -self.VEL_MAX), self.VEL_MAX)
         v_ang = gain_ang * ang_err
@@ -178,15 +154,14 @@ while (~rospy.is_shutdown()) and (sum(VO.Goal_rel*VO.Goal_rel) > 0.01**2):
         if once_free:
             break
 
-    # v_lin, v_ang = VO.velocity_convert(VO.bot_xv['x'][0], VO.bot_xv['x'][1], VO.bot_xv['th'], free_point[0]*np.cos(free_point[1]), free_point[0]*np.sin(free_point[1]))
     v_lin, v_ang = VO.velocity_convert(free_point[0], free_point[1])
-    # publish the velocities below
+    # publishing the velocities
     vel_msg = Twist()
     vel_msg.linear.x = v_lin
     vel_msg.angular.z = v_ang
     VO.pub_vel.publish(vel_msg)
 
-    # storing robot path with time stamps (data available in odom topic)
+    # storing robot path with time stamps
     path.append([VO.t, VO.bot_xv['x'][0], VO.bot_xv['x'][1]])
     iter += 1
     if iter % 300 == 0:
