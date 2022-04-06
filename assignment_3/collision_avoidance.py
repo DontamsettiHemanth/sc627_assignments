@@ -25,7 +25,9 @@ class velocity_obstacles:
 
     def __init__(self):
         self.t = 0
+        self.VEL_MAX = VEL_MAX
         self.goal = np.array([5, 0])
+        self.Goal_rel = np.array([5, 0])
         self.obs_xv = None
         self.bot_xv = None
         self.obs_sub = rospy.Subscriber('/obs_data', ObsData, self.callback_obs)
@@ -60,9 +62,11 @@ class velocity_obstacles:
         '''
 
         gain_ang = 1  # modify if necessary
+        # if sum(self.Goal_rel*self.Goal_rel) < 0.25**2:
+        #     self.VEL_MAX = 0.05
 
         ang_err = min(max(th_rel, -ANG_MAX), ANG_MAX)
-        v_lin = min(max(math.cos(ang_err)*v, -VEL_MAX), VEL_MAX)
+        v_lin = min(max(math.cos(ang_err)*v, -self.VEL_MAX), self.VEL_MAX)
         v_ang = gain_ang * ang_err
         return v_lin, v_ang
 
@@ -118,7 +122,7 @@ class velocity_obstacles:
         elif (-alpha <= th_2) and (th_2 <= alpha):
             return v2
         else:
-            print "-"
+            rospy.loginfo('%r\t %r', VO.bot_xv['x'], VO.bot_xv['th'])
             return np.array([0, 0])
 
 
@@ -135,11 +139,15 @@ vel_msg = Twist()
 VO.pub_vel.publish(vel_msg)
 
 iter = 0
-Goal_rel = VO.goal - VO.bot_xv['x']
-while (~rospy.is_shutdown()) or (sum(Goal_rel*Goal_rel) > 0.1**2):
+VO.Goal_rel = VO.goal - VO.bot_xv['x']
+GoalIsFar = True
+while (~rospy.is_shutdown()) and (sum(VO.Goal_rel*VO.Goal_rel) > 0.01**2):
     once_free = False  # true when a v and th are found without collision with all obs
     free_point = np.array([0, 0])
-    # rospy.loginfo("Completed %r iterations", iter)
+    if (sum(VO.Goal_rel*VO.Goal_rel) < 0.25**2) and GoalIsFar:
+        GoalIsFar = False
+        VO.VEL_MAX = 0.05
+        v_search = [i*0.01 for i in range(int(100*VO.VEL_MAX), 0, -1)]
     for v in v_search:
         for th in th_search:
             free_obs = True  # velocity vector avoids all obstacles?
@@ -149,6 +157,9 @@ while (~rospy.is_shutdown()) or (sum(Goal_rel*Goal_rel) > 0.1**2):
                 # collision Checking
                 v_rel = bot_v - obs['v']
                 PO = -VO.bot_xv['x'] + obs['x']
+                if sum(PO*PO) < 0.15**2:  # collided
+                    free_obs = False
+                    break
                 th_cri = np.arcsin(R/np.sqrt(sum(PO*PO)))
                 alpha = np.arccos(sum(v_rel*PO)/np.sqrt(sum(v_rel*v_rel)*sum(PO*PO)))
 
@@ -163,8 +174,6 @@ while (~rospy.is_shutdown()) or (sum(Goal_rel*Goal_rel) > 0.1**2):
                 free_point = VO.max_v(free_point, np.array([v, th]))
                 if sum(free_point == np.array([0, 0])) != 2:
                     once_free = True
-                    if iter % 100 == 0:
-                        print free_point
             pass
         if once_free:
             break
@@ -180,9 +189,10 @@ while (~rospy.is_shutdown()) or (sum(Goal_rel*Goal_rel) > 0.1**2):
     # storing robot path with time stamps (data available in odom topic)
     path.append([VO.t, VO.bot_xv['x'][0], VO.bot_xv['x'][1]])
     iter += 1
-    if iter % 100 == 0:
+    if iter % 300 == 0:
         rospy.loginfo("Completed %r iterations", iter)
     r.sleep()
+    VO.Goal_rel = VO.goal - VO.bot_xv['x']
 
 vel_msg = Twist()
 VO.pub_vel.publish(vel_msg)
@@ -195,5 +205,3 @@ with open("/root/catkin_ws/src/sc627_assignments/assignment_3/output.txt", "w") 
         file.write("\n")
         file.write(str(p)[1:-1])
         pass
-
-exit(1)
