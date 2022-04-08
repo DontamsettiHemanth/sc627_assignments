@@ -1,4 +1,4 @@
-# sc627_assignments
+# SC627_assignments
 This repository contains my assignment submissions for autonomous driving course of IIT Bombay. 
 
 ## Assignment 1
