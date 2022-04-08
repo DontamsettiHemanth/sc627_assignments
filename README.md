@@ -9,3 +9,9 @@ This repository contains my assignment submissions for autonomous driving course
 ## Assignment 2
 - This is about implemeting Potential field locomotion algorithm in ROS turtlebot3 ![Trace generated](https://github.com/DontamsettiHemanth/sc627_assignments/blob/master/assignment_2/WorkingROS.png "Potential field trace")
 - ![motion video of trace of the turtlebot3 ](https://github.com/DontamsettiHemanth/sc627_assignments/blob/master/assignment_2/motion_ROS.mp4)
+
+## Assignment 3
+- Implementation of Velocity obstacles method to navigate in a environment with moving and static obstacles.
+
+## Assignemnt 4
+- Decentralised algorithm for makaing all robots attain an equally spaced configuration
