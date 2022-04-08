@@ -98,7 +98,7 @@ class velocity_obstacles:
         elif (-alpha <= th_2) and (th_2 <= alpha):
             return v2
         else:
-            rospy.loginfo('%r\t %r', VO.bot_xv['x'], VO.bot_xv['th'])
+            # returning this value untill feasible velocity is found.
             return np.array([0, 0])
 
 
